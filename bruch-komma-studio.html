@@ -1,0 +1,957 @@
+<meta charset="utf-8">
+<title>Brüche ↔ Dezimalbrüche</title>
+<style>
+  :root{
+    --bg:#F3F6F7;
+    --card:#FFFFFF;
+    --ink:#24313A;
+    --muted:#5D6E79;
+    --line:#D9E2E6;
+    --teal:#0E7C7B;
+    --teal-ink:#0B5F5E;
+    --teal-soft:#E2F1F0;
+    --amber:#B9701A;
+    --amber-ink:#95580F;
+    --amber-soft:#F9EDDC;
+    --ok:#2E8F5B;
+    --ok-soft:#E1F2E8;
+    --err:#C64B40;
+    --err-soft:#FAE7E4;
+    --focus:#0E7C7B;
+    --disp:"Arial Rounded MT Bold","Avenir Next","Trebuchet MS",Verdana,sans-serif;
+    --body:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --math:Georgia,"Times New Roman",serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#121A1D; --card:#1B262B; --ink:#E6EDF0; --muted:#94A6AF; --line:#2D3B42;
+      --teal:#4CC3BF; --teal-ink:#7DD6D3; --teal-soft:#16393B;
+      --amber:#E8A44E; --amber-ink:#F0BC7A; --amber-soft:#3A2D18;
+      --ok:#57C58D; --ok-soft:#1B3A2B; --err:#E57A6E; --err-soft:#432420;
+      --focus:#4CC3BF;
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#F3F6F7; --card:#FFFFFF; --ink:#24313A; --muted:#5D6E79; --line:#D9E2E6;
+    --teal:#0E7C7B; --teal-ink:#0B5F5E; --teal-soft:#E2F1F0;
+    --amber:#B9701A; --amber-ink:#95580F; --amber-soft:#F9EDDC;
+    --ok:#2E8F5B; --ok-soft:#E1F2E8; --err:#C64B40; --err-soft:#FAE7E4;
+    --focus:#0E7C7B;
+  }
+  :root[data-theme="dark"]{
+    --bg:#121A1D; --card:#1B262B; --ink:#E6EDF0; --muted:#94A6AF; --line:#2D3B42;
+    --teal:#4CC3BF; --teal-ink:#7DD6D3; --teal-soft:#16393B;
+    --amber:#E8A44E; --amber-ink:#F0BC7A; --amber-soft:#3A2D18;
+    --ok:#57C58D; --ok-soft:#1B3A2B; --err:#E57A6E; --err-soft:#432420;
+    --focus:#4CC3BF;
+  }
+
+  *{box-sizing:border-box}
+  html{background:var(--bg)}
+  body{
+    font-family:var(--body); color:var(--ink); background:var(--bg);
+    margin:0; padding:1.25rem 1rem 4rem; line-height:1.55;
+  }
+  .wrap{max-width:920px; margin:0 auto; display:flex; flex-direction:column; gap:1.5rem}
+
+  /* ---------- Ansichten & Startseite ---------- */
+  .view{display:none}
+  .view.active{display:flex; flex-direction:column; gap:1.5rem; animation:fadein .32s ease}
+  @keyframes fadein{from{opacity:0; transform:translateY(7px)} to{opacity:1; transform:none}}
+
+  .home{display:grid; grid-template-columns:1fr 1fr; gap:1.1rem}
+  @media (max-width:640px){ .home{grid-template-columns:1fr} }
+  .tile{
+    text-align:left; cursor:pointer; border-radius:16px; padding:1.6rem 1.5rem;
+    border:1px solid var(--line); display:flex; flex-direction:column; gap:.45rem;
+    font-family:var(--body); color:var(--ink);
+    transition:transform .15s ease, box-shadow .22s ease;
+  }
+  .tile.teal{background:var(--teal-soft)}
+  .tile.amber{background:var(--amber-soft)}
+  .tile:hover{transform:translateY(-3px); box-shadow:0 12px 30px rgba(0,0,0,.12)}
+  .tile:focus-visible{outline:2.5px solid var(--focus); outline-offset:3px}
+  .tile .chip{
+    width:3rem; height:3rem; border-radius:13px; display:grid; place-items:center;
+    font-size:1.55rem; margin-bottom:.2rem;
+  }
+  .tile.teal .chip{background:var(--teal)}
+  .tile.amber .chip{background:var(--amber)}
+  .tile h2{font-family:var(--disp); font-size:1.4rem; margin:0}
+  .tile.teal h2{color:var(--teal-ink)}
+  .tile.amber h2{color:var(--amber-ink)}
+  .tile p{margin:0; color:var(--muted); font-size:.92rem; line-height:1.5}
+  .tile .go{margin-top:.35rem; font-weight:700; font-size:.92rem}
+  .tile.teal .go{color:var(--teal-ink)}
+  .tile.amber .go{color:var(--amber-ink)}
+
+  .backbtn{
+    align-self:flex-start; display:inline-flex; align-items:center; gap:.4rem;
+    background:none; border:1.5px solid var(--line); border-radius:999px;
+    color:var(--muted); font-family:var(--body); font-size:.88rem;
+    padding:.35rem .95rem; cursor:pointer;
+  }
+  .backbtn:hover{color:var(--ink); border-color:var(--muted)}
+  .backbtn:focus-visible{outline:2.5px solid var(--focus); outline-offset:2px}
+
+  /* ---------- Kopf ---------- */
+  header.top{display:flex; flex-direction:column; gap:.35rem; padding:.5rem 0 .25rem}
+  .eyebrow{
+    font-size:.75rem; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--muted); font-weight:600;
+  }
+  h1{
+    font-family:var(--disp); font-size:clamp(1.6rem,4vw,2.3rem); margin:0;
+    text-wrap:balance; line-height:1.15;
+  }
+  h1 .tealw{color:var(--teal)} h1 .ambw{color:var(--amber)}
+  .lede{color:var(--muted); max-width:62ch; margin:0}
+
+  /* ---------- Karten ---------- */
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:1.25rem 1.4rem;
+  }
+  .methods{display:grid; grid-template-columns:1fr 1fr; gap:1rem}
+  @media (max-width:760px){ .methods{grid-template-columns:1fr} }
+
+  .method h2{
+    font-family:var(--disp); font-size:1.15rem; margin:0 0 .25rem;
+    display:flex; align-items:center; gap:.55rem;
+  }
+  .method.teal h2{color:var(--teal-ink)}
+  .method.amber h2{color:var(--amber-ink)}
+  .dirbadge{
+    font-family:var(--math); font-size:1rem; border-radius:8px; padding:.15rem .5rem;
+    white-space:nowrap;
+  }
+  .teal .dirbadge{background:var(--teal-soft); color:var(--teal-ink)}
+  .amber .dirbadge{background:var(--amber-soft); color:var(--amber-ink)}
+
+  .method h3{
+    font-size:.8rem; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--muted); margin:1.1rem 0 .3rem; font-weight:700;
+  }
+  .method p{margin:.3rem 0}
+  .exline{
+    font-family:var(--math); font-size:1.15rem; margin:.45rem 0;
+    display:flex; align-items:center; flex-wrap:wrap; gap:.15rem .4rem;
+  }
+  .note{
+    font-size:.88rem; border-radius:10px; padding:.55rem .75rem; margin-top:.6rem;
+  }
+  .teal .note{background:var(--teal-soft)}
+  .amber .note{background:var(--amber-soft)}
+  .divsteps{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:.85rem; background:var(--bg); border:1px solid var(--line);
+    border-radius:10px; padding:.5rem .75rem; margin:.4rem 0; overflow-x:auto;
+    white-space:pre; line-height:1.7;
+  }
+  .small{font-size:.85rem; color:var(--muted)}
+
+  /* Brüche & Perioden */
+  .fr{
+    display:inline-flex; flex-direction:column; text-align:center;
+    vertical-align:middle; font-family:var(--math); line-height:1.12;
+    font-variant-numeric:tabular-nums; position:relative; top:-0.06em;
+  }
+  .fr .n{border-bottom:1.5px solid currentColor; padding:0 .25em}
+  .fr .d{padding:0 .25em}
+  .mixw{font-family:var(--math); margin-right:.15em}
+  .ov{text-decoration:overline; text-decoration-thickness:1.5px}
+  .opk{color:var(--muted); font-size:.85em}
+
+  /* ---------- Übungsbereich ---------- */
+  .practice h2{
+    font-family:var(--disp); font-size:1.3rem; margin:0 0 .75rem;
+  }
+  .settings{
+    background:var(--bg); border:1px solid var(--line); border-radius:12px;
+    padding:1rem 1.1rem 1.1rem; display:flex; flex-direction:column; gap:.9rem;
+  }
+  .settings .shead{
+    font-family:var(--disp); font-size:1.02rem; color:var(--ink); margin:0;
+    display:flex; align-items:center; gap:.45rem;
+  }
+  .setgroup{display:flex; flex-direction:column; gap:.45rem}
+  .setlabel{
+    font-size:.72rem; letter-spacing:.08em; text-transform:uppercase;
+    font-weight:700; color:var(--muted);
+  }
+  .pillrow{display:flex; flex-wrap:wrap; gap:.5rem}
+  .pill{
+    font-family:var(--disp); font-size:.92rem; border:1.5px solid var(--line);
+    background:var(--card); color:var(--ink); border-radius:999px;
+    padding:.38rem 1rem; cursor:pointer;
+  }
+  .pill:hover{border-color:var(--muted)}
+  .pill[aria-pressed="true"]{background:var(--teal); border-color:var(--teal); color:var(--card)}
+  .pill[aria-pressed="true"]:hover{border-color:var(--teal)}
+  .lvlcap{font-size:.85rem; color:var(--muted); margin:.75rem 0 0}
+
+  .scorebox{margin-top:1.1rem}
+  .scorehead{display:flex; justify-content:space-between; align-items:baseline; gap:1rem; flex-wrap:wrap}
+  .scorehead .lbl{font-size:.8rem; letter-spacing:.08em; text-transform:uppercase; font-weight:700; color:var(--muted)}
+  .scorehead .val{font-variant-numeric:tabular-nums; font-size:.9rem}
+  .bar{
+    height:12px; border-radius:999px; background:var(--line);
+    overflow:hidden; margin-top:.35rem;
+  }
+  .bar .fill{
+    height:100%; width:0%; border-radius:999px; background:var(--teal);
+    transition:width .35s ease, background-color .35s ease;
+  }
+  .bar .fill.mid{background:var(--amber)}
+  .bar .fill.low{background:var(--err)}
+  .resetbtn{
+    background:none; border:none; color:var(--muted); font-size:.8rem;
+    cursor:pointer; text-decoration:underline; padding:0;
+  }
+  .resetbtn:hover{color:var(--ink)}
+
+  /* Aufgabe */
+  .task{
+    margin-top:1.25rem; border:1.5px solid var(--line); border-radius:12px;
+    padding:1.25rem 1.25rem 1.4rem; background:var(--bg);
+  }
+  .task .prompt{font-weight:600; margin:0 0 .75rem}
+  .task .prompt .dirtag{
+    font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; font-weight:700;
+    border-radius:6px; padding:.12rem .45rem; margin-left:.4rem; vertical-align:middle;
+  }
+  .dirtag.z2d{background:var(--teal-soft); color:var(--teal-ink)}
+  .dirtag.d2z{background:var(--amber-soft); color:var(--amber-ink)}
+  .bignum{
+    font-family:var(--math); font-size:2.1rem; margin:.25rem 0 1rem;
+    font-variant-numeric:tabular-nums;
+  }
+  .bignum .fr{vertical-align:middle; top:-0.04em}
+
+  /* Eingaben */
+  .answer{display:flex; align-items:center; gap:.6rem; flex-wrap:wrap}
+  .answer input{
+    font-family:var(--math); font-size:1.35rem; text-align:center;
+    color:var(--ink); background:var(--card); border:1.5px solid var(--line);
+    border-radius:8px; padding:.35rem .3rem; width:4.2ch;
+    font-variant-numeric:tabular-nums;
+  }
+  .answer input:focus-visible, .btn:focus-visible, .pill:focus-visible,
+  .hintbtn:focus-visible, .resetbtn:focus-visible{
+    outline:2.5px solid var(--focus); outline-offset:2px;
+  }
+  .answer input:disabled{opacity:.55}
+  .answer input.per{
+    border-color:var(--teal); border-style:dashed;
+    text-decoration:overline; text-decoration-thickness:1.5px;
+  }
+  .fieldcol{display:flex; flex-direction:column; align-items:center; gap:.2rem}
+  .fieldcol .cap{font-size:.7rem; color:var(--muted); letter-spacing:.04em}
+  .comma{font-family:var(--math); font-size:1.8rem; line-height:1; align-self:flex-start; margin-top:.35rem}
+  .fracin{display:flex; flex-direction:column; gap:.3rem; align-items:center}
+  .fracin .rule{height:2px; background:var(--ink); width:100%; border-radius:2px}
+  .preview{font-size:.9rem; color:var(--muted); margin-top:.6rem; min-height:1.4em}
+  .preview b{font-family:var(--math); font-size:1.05rem; color:var(--ink); font-weight:400}
+
+  /* Buttons */
+  .btnrow{display:flex; gap:.6rem; flex-wrap:wrap; margin-top:1rem; align-items:center}
+  .btn{
+    font-family:var(--disp); font-size:.95rem; border-radius:10px;
+    padding:.5rem 1.2rem; cursor:pointer; border:1.5px solid transparent;
+  }
+  .btn.primary{background:var(--teal); color:#fff; border-color:var(--teal)}
+  :root[data-theme="dark"] .btn.primary{color:#0F1A1C}
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) .btn.primary{color:#0F1A1C}
+  }
+  .btn.primary:hover{filter:brightness(1.08)}
+  .btn.ghost{background:transparent; color:var(--ink); border-color:var(--line)}
+  .btn.ghost:hover{border-color:var(--muted)}
+  .btn.linky{background:none; border:none; color:var(--muted); text-decoration:underline; font-family:var(--body); font-size:.85rem; padding:.3rem}
+  .btn:disabled{opacity:.5; cursor:default}
+
+  /* Tipps */
+  .hintwrap{margin-top:1rem}
+  .hintbtn{
+    display:inline-flex; align-items:center; gap:.4rem;
+    background:none; border:1.5px dashed var(--line); border-radius:10px;
+    color:var(--muted); font-size:.88rem; padding:.4rem .9rem; cursor:pointer;
+  }
+  .hintbtn:hover{color:var(--ink); border-color:var(--muted)}
+  .hints{display:flex; flex-direction:column; gap:.5rem; margin:.6rem 0 0}
+  .hint{
+    background:var(--teal-soft); border-radius:10px; padding:.55rem .8rem;
+    font-size:.92rem;
+  }
+  .hint .hno{font-weight:700; color:var(--teal-ink); margin-right:.35rem; font-size:.8rem; letter-spacing:.05em}
+  .hint .fr{font-size:1.05em}
+
+  /* Feedback */
+  .fb{border-radius:10px; padding:.7rem .9rem; margin-top:1rem; font-size:.95rem; display:none}
+  .fb.show{display:block}
+  .fb.ok{background:var(--ok-soft); border-left:4px solid var(--ok)}
+  .fb.err{background:var(--err-soft); border-left:4px solid var(--err)}
+  .fb.neutral{background:var(--teal-soft); border-left:4px solid var(--teal)}
+  .fb .fbtitle{font-weight:700; margin:0 0 .15rem}
+  .fb.ok .fbtitle{color:var(--ok)} .fb.err .fbtitle{color:var(--err)}
+  .sol{margin:.4rem 0 0; padding-left:1.2rem}
+  .sol li{margin:.3rem 0; font-family:var(--math); font-size:1.02rem}
+  .sol li .expl{font-family:var(--body); font-size:.85rem; color:var(--muted)}
+
+  footer{color:var(--muted); font-size:.8rem; text-align:center; margin-top:.5rem}
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important; animation:none !important}
+  }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow">Mathematik · 6. Jahrgangsstufe</p>
+    <h1><span class="tealw">Brüche</span> ↔ <span class="ambw">Dezimalbrüche</span></h1>
+    <p class="lede">Erst die beiden Methoden auffrischen, dann üben – mit drei Niveaustufen, aufklappbaren Tipps und Periodeneingabe.</p>
+  </header>
+
+  <!-- ============ Startseite ============ -->
+  <div id="viewStart" class="view active">
+    <div class="home">
+      <button class="tile teal" data-go="review" type="button">
+        <span class="chip" aria-hidden="true">📖</span>
+        <h2>Wiederholen</h2>
+        <p>Die beiden Methoden kurz auffrischen: erweitern, kürzen und schriftlich dividieren – an eingängigen Beispielen erklärt.</p>
+        <span class="go">Jetzt ansehen →</span>
+      </button>
+      <button class="tile amber" data-go="practice" type="button">
+        <span class="chip" aria-hidden="true">✏️</span>
+        <h2>Üben</h2>
+        <p>Selbst umwandeln – in drei Niveaustufen, mit aufklappbaren Tipps, Periodeneingabe und Fortschrittsbalken.</p>
+        <span class="go">Jetzt üben →</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ============ Ansicht: Wiederholen ============ -->
+  <div id="viewReview" class="view">
+    <button class="backbtn" data-go="start" type="button">← Zur Startseite</button>
+
+  <!-- ============ Methode 1 & 2 ============ -->
+  <section class="methods">
+    <div class="card method teal">
+      <h2><span class="dirbadge"><span class="fr"><span class="n">3</span><span class="d">4</span></span> → 0,75</span> Vom Bruch zum Dezimalbruch</h2>
+
+      <h3>Weg 1 · Erweitern (oder erst kürzen)</h3>
+      <p>Bringe den Nenner auf 10, 100 oder 1000:</p>
+      <p class="exline">
+        <span class="fr"><span class="n">3</span><span class="d">4</span></span>
+        <span class="opk">mit 25 erweitert</span> =
+        <span class="fr"><span class="n">75</span><span class="d">100</span></span>
+        = <b>0,75</b>
+      </p>
+      <p class="exline">
+        <span class="fr"><span class="n">12</span><span class="d">16</span></span>
+        <span class="opk">erst mit 4 kürzen!</span> =
+        <span class="fr"><span class="n">3</span><span class="d">4</span></span>
+        = <b>0,75</b>
+      </p>
+      <div class="note">Erweitern klappt immer, wenn der (gekürzte) Nenner nur die Primfaktoren <b>2</b> und <b>5</b> enthält – z.&nbsp;B. 2, 4, 5, 8, 10, 20, 25, 40, 50 …</div>
+
+      <h3>Weg 2 · Schriftlich dividieren</h3>
+      <p>Bruchstrich heißt „geteilt durch“: <span class="fr"><span class="n">3</span><span class="d">8</span></span>&nbsp;= 3&nbsp;:&nbsp;8</p>
+      <div class="divsteps">3 : 8 = 0,375
+30 : 8 = 3   Rest 6
+60 : 8 = 7   Rest 4
+40 : 8 = 5   Rest 0  ✓ fertig</div>
+      <p>Wiederholt sich ein Rest, beginnt die <b>Periode</b>:</p>
+      <div class="divsteps">2 : 3 = 0,666… = 0,<span class="ov">6</span>
+20 : 3 = 6   Rest 2
+20 : 3 = 6   Rest 2  → wiederholt sich!</div>
+      <div class="note">Die Periode kann auch <b>länger</b> sein:
+        <span class="fr"><span class="n">5</span><span class="d">11</span></span> = 0,4545… = 0,<span class="ov">45</span>
+      </div>
+      <p class="small">Gemischte Zahlen: Die ganze Zahl bleibt einfach vor dem Komma stehen. &nbsp;2<span class="fr"><span class="n">3</span><span class="d">4</span></span> = <b>2,75</b></p>
+    </div>
+
+    <div class="card method amber">
+      <h2><span class="dirbadge">0,35 → <span class="fr"><span class="n">7</span><span class="d">20</span></span></span> Vom Dezimalbruch zum Bruch</h2>
+
+      <h3>Schritt 1 · Stellenwert lesen</h3>
+      <p>Die letzte Ziffer verrät den Nenner: eine Nachkommastelle → Zehntel, zwei → Hundertstel, drei → Tausendstel.</p>
+      <p class="exline">0,35 <span class="opk">(2 Stellen → Hundertstel)</span> =
+        <span class="fr"><span class="n">35</span><span class="d">100</span></span>
+      </p>
+
+      <h3>Schritt 2 · Vollständig kürzen</h3>
+      <p class="exline">
+        <span class="fr"><span class="n">35</span><span class="d">100</span></span>
+        <span class="opk">mit 5 kürzen</span> =
+        <span class="fr"><span class="n">7</span><span class="d">20</span></span>
+        <span class="opk">✓ fertig gekürzt</span>
+      </p>
+      <p class="exline">2,4 = 2<span class="fr"><span class="n">4</span><span class="d">10</span></span>
+        <span class="opk">mit 2 kürzen</span> =
+        <b>2<span class="fr"><span class="n">2</span><span class="d">5</span></span></b>
+      </p>
+      <div class="note">Kürze so lange, bis Zähler und Nenner keinen gemeinsamen Teiler mehr haben – erst dann ist der Bruch <b>vollständig gekürzt</b>.</div>
+
+      <h3>Periodische Dezimalbrüche (einfache Fälle)</h3>
+      <p class="exline">0,<span class="ov">3</span> =
+        <span class="fr"><span class="n">3</span><span class="d">9</span></span> =
+        <span class="fr"><span class="n">1</span><span class="d">3</span></span>
+      </p>
+      <div class="note">Merke: 0,<span class="ov">1</span> = <span class="fr"><span class="n">1</span><span class="d">9</span></span>. Eine Ziffer Periode → Neuntel, dann kürzen.</div>
+    </div>
+  </section>
+  </div>
+
+  <!-- ============ Ansicht: Üben ============ -->
+  <div id="viewPractice" class="view">
+    <button class="backbtn" data-go="start" type="button">← Zur Startseite</button>
+
+  <!-- ============ Übungsbereich ============ -->
+  <section class="card practice">
+    <h2>Übungsbereich</h2>
+
+    <div class="settings">
+      <p class="shead">⚙️ Einstellungen</p>
+      <div class="setgroup">
+        <span class="setlabel">Ich übe …</span>
+        <div class="pillrow" role="group" aria-label="Umwandlungsrichtung wählen">
+          <button class="pill" data-dir="z2d" aria-pressed="false" type="button">Bruch → Dezimal</button>
+          <button class="pill" data-dir="d2z" aria-pressed="false" type="button">Dezimal → Bruch</button>
+          <button class="pill" data-dir="both" aria-pressed="true" type="button">Gemischt</button>
+        </div>
+      </div>
+      <div class="setgroup">
+        <span class="setlabel">Schwierigkeit</span>
+        <div class="pillrow" role="group" aria-label="Niveaustufe wählen">
+          <button class="pill" data-lvl="leicht" aria-pressed="true" type="button">Leicht</button>
+          <button class="pill" data-lvl="mittel" aria-pressed="false" type="button">Mittel</button>
+          <button class="pill" data-lvl="schwer" aria-pressed="false" type="button">Schwer</button>
+        </div>
+      </div>
+    </div>
+    <p class="lvlcap" id="lvlcap"></p>
+
+    <div class="scorebox">
+      <div class="scorehead">
+        <span class="lbl">Erfolgsquote (1. Versuch)</span>
+        <span class="val" id="scoretext">Noch keine Aufgabe bearbeitet</span>
+        <button class="resetbtn" id="resetbtn" type="button">Zurücksetzen</button>
+      </div>
+      <div class="bar" role="progressbar" aria-label="Erfolgsquote" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="barwrap">
+        <div class="fill" id="barfill"></div>
+      </div>
+    </div>
+
+    <div class="task">
+      <p class="prompt" id="prompt"></p>
+      <div class="bignum" id="bignum"></div>
+
+      <!-- Eingabe: Dezimalbruch -->
+      <div class="answer" id="ansDec" hidden>
+        <div class="fieldcol">
+          <input id="dWhole" inputmode="numeric" autocomplete="off" placeholder="0" aria-label="Ganze Zahl vor dem Komma">
+          <span class="cap">Ganze</span>
+        </div>
+        <span class="comma">,</span>
+        <div class="fieldcol">
+          <input id="dPre" inputmode="numeric" autocomplete="off" aria-label="Nachkommastellen ohne Periode">
+          <span class="cap">Nachkomma</span>
+        </div>
+        <div class="fieldcol">
+          <input id="dPer" class="per" inputmode="numeric" autocomplete="off" placeholder="–" aria-label="Periode (falls vorhanden)">
+          <span class="cap">Periode</span>
+        </div>
+      </div>
+
+      <!-- Eingabe: Bruch -->
+      <div class="answer" id="ansFrac" hidden>
+        <div class="fieldcol">
+          <input id="fWhole" inputmode="numeric" autocomplete="off" placeholder="–" aria-label="Ganze Zahl (falls nötig)">
+          <span class="cap">Ganze</span>
+        </div>
+        <div class="fieldcol">
+          <div class="fracin">
+            <input id="fNum" inputmode="numeric" autocomplete="off" aria-label="Zähler">
+            <div class="rule" aria-hidden="true"></div>
+            <input id="fDen" inputmode="numeric" autocomplete="off" aria-label="Nenner">
+          </div>
+          <span class="cap">Zähler / Nenner</span>
+        </div>
+      </div>
+
+      <p class="preview" id="preview"></p>
+
+      <div class="hintwrap">
+        <button class="hintbtn" id="hintbtn" type="button">💡 <span id="hintbtnlabel">Tipp anzeigen</span></button>
+        <div class="hints" id="hints"></div>
+      </div>
+
+      <div class="fb" id="fb" aria-live="polite"></div>
+
+      <div class="btnrow">
+        <button class="btn primary" id="checkbtn" type="button">Prüfen</button>
+        <button class="btn ghost" id="solbtn" type="button" hidden>Lösung zeigen</button>
+        <button class="btn primary" id="nextbtn" type="button" hidden>Nächste Aufgabe →</button>
+        <button class="btn linky" id="skipbtn" type="button">Aufgabe überspringen</button>
+      </div>
+    </div>
+  </section>
+  </div>
+
+  <footer>Viel Erfolg beim Üben! Kürzen · Erweitern · Dividieren – du schaffst das.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- Mathe-Helfer ---------------- */
+  function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ [a,b]=[b,a%b]; } return a; }
+
+  // Dezimalentwicklung von n/d (0 <= n < d) per schriftlicher Division.
+  // Liefert minimale Vorperiode + primitive Periode.
+  function expand(n,d){
+    let rem=n, digits="", seen=new Map();
+    while(rem!==0 && !seen.has(rem)){
+      seen.set(rem, digits.length);
+      rem*=10;
+      digits+=Math.floor(rem/d);
+      rem%=d;
+    }
+    if(rem===0) return {pre:digits, per:""};
+    const i=seen.get(rem);
+    return {pre:digits.slice(0,i), per:digits.slice(i)};
+  }
+
+  // Primitive Periode ("4545" -> "45")
+  function primitivePeriod(p){
+    const L=p.length;
+    for(let k=1;k<=L;k++){
+      if(L%k!==0) continue;
+      if(p===p.slice(0,k).repeat(L/k)) return p.slice(0,k);
+    }
+    return p;
+  }
+
+  // Kanonische Form einer Dezimaldarstellung (whole, pre, per)
+  function canon(whole, pre, per){
+    per=primitivePeriod(per||"");
+    if(per && /^0+$/.test(per)) per="";
+    if(!per){
+      pre=(pre||"").replace(/0+$/,"");
+    } else {
+      // Vorperiode minimieren: 0,8(33) == 0,8(3) etc. – Rotation
+      while(pre.length && pre[pre.length-1]===per[per.length-1]){
+        pre=pre.slice(0,-1);
+        per=per[per.length-1]+per.slice(0,-1);
+      }
+    }
+    return {whole:parseInt(whole||"0",10)||0, pre:pre||"", per:per};
+  }
+  function sameDec(a,b){ return a.whole===b.whole && a.pre===b.pre && a.per===b.per; }
+
+  function pow10(k){ return Math.pow(10,k); }
+
+  // Hat der Nenner (gekürzt) nur Primfaktoren 2 und 5?
+  function terminating(d){
+    while(d%2===0) d/=2;
+    while(d%5===0) d/=5;
+    return d===1;
+  }
+  // kleinstes k mit d | 10^k  (nur für abbrechende Nenner)
+  function tenPower(d){
+    let k=0, m=1;
+    while(m%d!==0){ k++; m*=10; }
+    return k;
+  }
+
+  /* ---------------- HTML-Bausteine ---------------- */
+  function frHTML(n,d){ return '<span class="fr"><span class="n">'+n+'</span><span class="d">'+d+'</span></span>'; }
+  function mixHTML(w,n,d){ return (w? '<span class="mixw">'+w+'</span>':'')+frHTML(n,d); }
+  function decHTML(whole,pre,per){
+    let s=String(whole)+',';
+    s+=pre;
+    if(per) s+='<span class="ov">'+per+'</span>';
+    if(!pre && !per) s+='0';
+    return s;
+  }
+  function decDots(whole,pre,per){
+    if(!per) return String(whole)+','+(pre||"0");
+    return String(whole)+','+pre+per+per+'…';
+  }
+
+  /* ---------------- Aufgaben-Pools ---------------- */
+  // Z2D: {w, n, d}   D2Z: {i, pre, per}
+  const POOLS={
+    leicht:{
+      cap:"Nenner wie 2, 4, 5, 10, 20, 25 – alle Ergebnisse gehen glatt auf.",
+      z2d:[ {w:0,n:1,d:2},{w:0,n:1,d:4},{w:0,n:3,d:4},{w:0,n:1,d:5},{w:0,n:2,d:5},
+            {w:0,n:4,d:5},{w:0,n:3,d:10},{w:0,n:7,d:10},{w:0,n:9,d:10},{w:0,n:3,d:20},
+            {w:0,n:11,d:20},{w:0,n:1,d:25},{w:0,n:12,d:25},{w:0,n:7,d:50},{w:0,n:2,d:4},{w:0,n:5,d:10} ],
+      d2z:[ {i:0,pre:"5",per:""},{i:0,pre:"2",per:""},{i:0,pre:"4",per:""},{i:0,pre:"8",per:""},
+            {i:0,pre:"25",per:""},{i:0,pre:"75",per:""},{i:0,pre:"1",per:""},{i:0,pre:"05",per:""},
+            {i:0,pre:"15",per:""},{i:0,pre:"35",per:""},{i:0,pre:"6",per:""},{i:0,pre:"45",per:""} ]
+    },
+    mittel:{
+      cap:"Erst kürzen oder geschickt erweitern, Achtel, erste Perioden und gemischte Zahlen.",
+      z2d:[ {w:0,n:4,d:8},{w:0,n:6,d:8},{w:0,n:12,d:16},{w:0,n:15,d:20},{w:0,n:9,d:12},
+            {w:0,n:1,d:8},{w:0,n:3,d:8},{w:0,n:5,d:8},{w:0,n:7,d:8},{w:0,n:9,d:40},{w:0,n:7,d:40},
+            {w:0,n:1,d:3},{w:0,n:2,d:3},{w:0,n:1,d:6},{w:0,n:5,d:6},{w:0,n:2,d:9},{w:0,n:7,d:9},
+            {w:1,n:1,d:2},{w:2,n:3,d:4},{w:3,n:1,d:5},{w:1,n:7,d:20},{w:2,n:3,d:8} ],
+      d2z:[ {i:0,pre:"125",per:""},{i:0,pre:"375",per:""},{i:0,pre:"625",per:""},{i:0,pre:"875",per:""},
+            {i:0,pre:"04",per:""},{i:0,pre:"08",per:""},{i:0,pre:"12",per:""},{i:0,pre:"36",per:""},
+            {i:0,pre:"55",per:""},{i:0,pre:"85",per:""},{i:0,pre:"96",per:""},
+            {i:1,pre:"5",per:""},{i:2,pre:"25",per:""},{i:3,pre:"4",per:""},{i:1,pre:"75",per:""},{i:2,pre:"05",per:""} ]
+    },
+    schwer:{
+      cap:"Längere Perioden (z. B. Elftel), gemischt-periodische Zahlen, knifflige Kürzungen.",
+      z2d:[ {w:0,n:1,d:11},{w:0,n:4,d:11},{w:0,n:5,d:11},{w:0,n:7,d:11},{w:0,n:10,d:11},
+            {w:0,n:4,d:33},{w:0,n:8,d:33},{w:0,n:1,d:7},
+            {w:0,n:1,d:12},{w:0,n:5,d:12},{w:0,n:7,d:12},{w:0,n:11,d:12},
+            {w:0,n:7,d:16},{w:0,n:11,d:16},
+            {w:1,n:2,d:3},{w:2,n:1,d:6},{w:1,n:5,d:11},{w:3,n:1,d:3},{w:2,n:7,d:8},{w:2,n:5,d:6} ],
+      d2z:[ {i:0,pre:"225",per:""},{i:0,pre:"175",per:""},{i:0,pre:"675",per:""},{i:0,pre:"056",per:""},
+            {i:0,pre:"144",per:""},{i:0,pre:"264",per:""},{i:1,pre:"375",per:""},{i:2,pre:"44",per:""},
+            {i:3,pre:"125",per:""},{i:1,pre:"08",per:""},
+            {i:0,pre:"",per:"3"},{i:0,pre:"",per:"6"},{i:0,pre:"",per:"1"},{i:0,pre:"",per:"4"},
+            {i:0,pre:"",per:"7"},{i:0,pre:"",per:"2"} ]
+    }
+  };
+
+  /* ---------------- Aufgabe aufbereiten ---------------- */
+  function buildZ2D(spec){
+    const {w,n,d}=spec;
+    const g=gcd(n,d), rn=n/g, rd=d/g;
+    const dec=expand(rn,rd);
+    const target=canon(w, dec.pre, dec.per);
+    const isTerm=!dec.per;
+
+    // Tipps
+    const hints=[];
+    if(w>0) hints.push('Die ganze Zahl <b>'+w+'</b> bleibt vor dem Komma stehen. Wandle nur '+frHTML(n,d)+' um.');
+    if(g>1) hints.push('Kürze zuerst! '+frHTML(n,d)+' lässt sich mit <b>'+g+'</b> kürzen: '+frHTML(n,d)+' = '+frHTML(rn,rd)+'.');
+    if(isTerm){
+      const k=tenPower(rd), f=pow10(k)/rd;
+      if(f>1) hints.push('Erweitere '+frHTML(rn,rd)+' mit <b>'+f+'</b> – dann steht im Nenner '+pow10(k)+'.');
+      else hints.push('Der Nenner ist schon eine Zehnerpotenz – lies die Nachkommastellen direkt ab.');
+    } else {
+      hints.push('Der Nenner '+rd+' lässt sich <b>nicht</b> auf 10, 100 oder 1000 erweitern (er enthält andere Primfaktoren als 2 und 5). Dividiere schriftlich: '+rn+' : '+rd+'.');
+      hints.push('Dividiere so lange, bis sich ein <b>Rest wiederholt</b> – dort beginnt die Periode.');
+      if(dec.per.length>1) hints.push('Achtung: Die Periode ist hier <b>'+dec.per.length+' Ziffern</b> lang! Trage sie komplett ins Periodenfeld ein.');
+    }
+
+    // Lösungsschritte
+    const sol=[];
+    if(w>0) sol.push(mixHTML(w,n,d)+' = '+w+' + '+frHTML(n,d)+' <span class="expl">— die '+w+' bleibt vor dem Komma</span>');
+    if(g>1) sol.push(frHTML(n,d)+' = '+frHTML(rn,rd)+' <span class="expl">— mit '+g+' gekürzt</span>');
+    if(isTerm){
+      const k=tenPower(rd), f=pow10(k)/rd;
+      if(f>1) sol.push(frHTML(rn,rd)+' = '+frHTML(rn*f,pow10(k))+' <span class="expl">— mit '+f+' erweitert</span>');
+      sol.push('Ergebnis: <b>'+decHTML(target.whole,target.pre,target.per)+'</b>');
+    } else {
+      sol.push(rn+' : '+rd+' = '+decDots(0,dec.pre,dec.per)+' <span class="expl">— die Reste wiederholen sich</span>');
+      sol.push('Ergebnis: <b>'+decHTML(target.whole,target.pre,target.per)+'</b>');
+    }
+
+    return {
+      dir:"z2d",
+      promptHTML:'Wandle in einen Dezimalbruch um: <span class="dirtag z2d">Bruch → Dezimal</span>',
+      numHTML:mixHTML(w||"",n,d),
+      target, hints, sol,
+      hasPeriod:!isTerm
+    };
+  }
+
+  function buildD2Z(spec){
+    const {i,pre,per}=spec;
+    let N,D;
+    if(per){
+      // (nur einfache Fälle: Vorperiode leer, Periodenlänge 1)
+      N=parseInt(per,10); D=9;
+    } else {
+      N=parseInt(pre,10); D=pow10(pre.length);
+    }
+    const g=gcd(N,D), rn=N/g, rd=D/g;   // echter Bruchteil, vollständig gekürzt
+    const impN=i*rd+rn, impD=rd;        // unechter Bruch als Alternative
+
+    const hints=[];
+    const sol=[];
+    if(per){
+      hints.push('Merke: 0,<span class="ov">1</span> = '+frHTML(1,9)+'.');
+      hints.push('Also ist 0,<span class="ov">'+per+'</span> = '+frHTML(per,9)+'. Prüfe noch, ob du kürzen kannst!');
+      sol.push('0,<span class="ov">'+per+'</span> = '+frHTML(per,9)+' <span class="expl">— eine Ziffer Periode → Neuntel</span>');
+      if(g>1) sol.push(frHTML(N,9)+' = '+frHTML(rn,rd)+' <span class="expl">— mit '+g+' gekürzt</span>');
+      else sol.push(frHTML(rn,rd)+' ist schon vollständig gekürzt.');
+    } else {
+      const stelle=pre.length===1?'Zehntel':(pre.length===2?'Hundertstel':'Tausendstel');
+      if(i>0) hints.push('Die <b>'+i+'</b> vor dem Komma bleibt als ganze Zahl stehen. Wandle nur 0,'+pre+' um.');
+      hints.push('Lies den Stellenwert: '+pre.length+' Nachkommastelle'+(pre.length>1?'n':'')+' → <b>'+stelle+'</b>. Also: 0,'+pre+' = '+frHTML(parseInt(pre,10),D)+'.');
+      if(g>1) hints.push('Jetzt <b>vollständig kürzen</b> – Zähler und Nenner haben den gemeinsamen Teiler '+g+'.');
+      else hints.push('Prüfe, ob du kürzen kannst – hier geht tatsächlich nichts mehr!');
+      sol.push((i>0? i+',' : '0,')+pre+' = '+(i>0? mixHTML(i,N,D) : frHTML(N,D))+' <span class="expl">— letzte Ziffer: '+stelle+'</span>');
+      if(g>1) sol.push(frHTML(N,D)+' = '+frHTML(rn,rd)+' <span class="expl">— mit '+g+' vollständig gekürzt</span>');
+      sol.push('Ergebnis: <b>'+(i>0? mixHTML(i,rn,rd) : frHTML(rn,rd))+'</b>'+(i>0?' <span class="expl">(oder als unechter Bruch '+frHTML(impN,impD)+')</span>':''));
+    }
+
+    return {
+      dir:"d2z",
+      promptHTML:'Wandle in einen <b>vollständig gekürzten</b> Bruch um: <span class="dirtag d2z">Dezimal → Bruch</span>',
+      numHTML:decHTML(i,pre,per),
+      frac:{whole:i, n:rn, d:rd, impN, impD},
+      hints, sol
+    };
+  }
+
+  /* ---------------- Zustand ---------------- */
+  let level="leicht";
+  let dirMode="both";         // "z2d" | "d2z" | "both"
+  let task=null;
+  let lastKeys=[];            // zuletzt gestellte Aufgaben (keine direkten Wiederholungen)
+  let attempted=false;        // erste Abgabe schon gewertet?
+  let locked=false;           // Aufgabe abgeschlossen
+  let hintIdx=0;
+  const stats={done:0, first:0};
+
+  /* ---------------- DOM ---------------- */
+  const $=id=>document.getElementById(id);
+  const el={
+    prompt:$("prompt"), bignum:$("bignum"),
+    ansDec:$("ansDec"), ansFrac:$("ansFrac"),
+    dWhole:$("dWhole"), dPre:$("dPre"), dPer:$("dPer"),
+    fWhole:$("fWhole"), fNum:$("fNum"), fDen:$("fDen"),
+    preview:$("preview"), hints:$("hints"), hintbtn:$("hintbtn"), hintbtnlabel:$("hintbtnlabel"),
+    fb:$("fb"), check:$("checkbtn"), sol:$("solbtn"), next:$("nextbtn"), skip:$("skipbtn"),
+    scoretext:$("scoretext"), barfill:$("barfill"), barwrap:$("barwrap"),
+    lvlcap:$("lvlcap"), reset:$("resetbtn")
+  };
+  const decInputs=[el.dWhole,el.dPre,el.dPer];
+  const fracInputs=[el.fWhole,el.fNum,el.fDen];
+
+  /* ---------------- Aufgabenwahl ---------------- */
+  function pickTask(){
+    const pool=POOLS[level];
+    // Richtung gemäß Einstellung; bei "Gemischt" ~55% Bruch→Dezimal
+    const dir = dirMode==="both" ? (Math.random()<0.55 ? "z2d" : "d2z") : dirMode;
+    const list=pool[dir];
+    let spec,key,tries=0;
+    do{
+      spec=list[Math.floor(Math.random()*list.length)];
+      key=dir+JSON.stringify(spec);
+      tries++;
+    }while(lastKeys.includes(key) && tries<25);
+    lastKeys.push(key);
+    if(lastKeys.length>6) lastKeys.shift();
+    return dir==="z2d" ? buildZ2D(spec) : buildD2Z(spec);
+  }
+
+  function newTask(){
+    task=pickTask();
+    attempted=false; locked=false; hintIdx=0;
+
+    el.prompt.innerHTML=task.promptHTML;
+    el.bignum.innerHTML=task.numHTML;
+    el.hints.innerHTML="";
+    el.hintbtn.hidden=false;
+    el.hintbtnlabel.textContent="Tipp anzeigen";
+    el.fb.className="fb"; el.fb.innerHTML="";
+    el.sol.hidden=true; el.next.hidden=true;
+    el.check.hidden=false; el.check.disabled=false;
+    el.skip.hidden=false;
+    el.preview.innerHTML="";
+
+    const isDec=task.dir==="z2d";
+    el.ansDec.hidden=!isDec;
+    el.ansFrac.hidden=isDec;
+    (isDec?decInputs:fracInputs).forEach(inp=>{ inp.value=""; inp.disabled=false; });
+    (isDec?el.dWhole:el.fWhole).focus();
+    updatePreview();
+  }
+
+  /* ---------------- Vorschau ---------------- */
+  function updatePreview(){
+    if(!task) return;
+    if(task.dir==="z2d"){
+      const w=el.dWhole.value||"0", pre=el.dPre.value, per=el.dPer.value;
+      if(!pre && !per && !el.dWhole.value){ el.preview.innerHTML=""; return; }
+      el.preview.innerHTML='So liest sich deine Eingabe: <b>'+decHTML(w,pre,per)+'</b>'+
+        (per? ' <span>(= '+w+','+pre+per+per+'…)</span>':'');
+    } else {
+      const w=el.fWhole.value, n=el.fNum.value, d=el.fDen.value;
+      if(!n && !d && !w){ el.preview.innerHTML=""; return; }
+      el.preview.innerHTML='So liest sich deine Eingabe: <b>'+(w?'<span class="mixw">'+w+'</span>':'')+
+        frHTML(n||"?",d||"?")+'</b>';
+    }
+  }
+
+  /* ---------------- Prüfen ---------------- */
+  function recordFirst(correct){
+    if(attempted) return;
+    attempted=true;
+    stats.done++;
+    if(correct) stats.first++;
+    renderScore();
+  }
+
+  function showFB(kind,title,body){
+    el.fb.className="fb show "+kind;
+    el.fb.innerHTML='<p class="fbtitle">'+title+'</p>'+(body||"");
+  }
+
+  function finish(correct){
+    locked=true;
+    (task.dir==="z2d"?decInputs:fracInputs).forEach(i=>i.disabled=true);
+    el.check.hidden=true; el.sol.hidden=true; el.skip.hidden=true;
+    el.next.hidden=false; el.next.focus();
+  }
+
+  function check(){
+    if(locked || !task) return;
+    if(task.dir==="z2d") checkDec(); else checkFrac();
+  }
+
+  function checkDec(){
+    const wRaw=el.dWhole.value.trim(), pre=el.dPre.value.trim(), per=el.dPer.value.trim();
+    if(!pre && !per){
+      showFB("neutral","Noch keine Nachkommastellen","Trage die Nachkommastellen ein – bei einer Periode nutze das gestrichelte Periodenfeld.");
+      return;
+    }
+    const user=canon(wRaw,pre,per);
+    const ok=sameDec(user,task.target);
+    recordFirst(ok);
+    if(ok){
+      showFB("ok","Richtig! 🎉","<b>"+decHTML(task.target.whole,task.target.pre,task.target.per)+"</b> stimmt genau.");
+      finish(true);
+    } else {
+      let extra="";
+      if(task.target.per && !per) extra="Die Zahl bricht nicht ab – denk an die <b>Periodenschreibweise</b> (gestricheltes Feld).";
+      else if(!task.target.per && per) extra="Diese Zahl geht glatt auf – hier ist gar keine Periode nötig.";
+      else if(task.target.whole!==user.whole) extra="Schau nochmal auf die <b>ganze Zahl</b> vor dem Komma.";
+      showFB("err","Leider nicht richtig",(extra||"Rechne in Ruhe nach – die Tipps helfen dir weiter.")+ " Du kannst es gleich nochmal versuchen.");
+      el.sol.hidden=false;
+    }
+  }
+
+  function checkFrac(){
+    const w=el.fWhole.value.trim(), nS=el.fNum.value.trim(), dS=el.fDen.value.trim();
+    if(!nS || !dS){
+      showFB("neutral","Bruch unvollständig","Trage Zähler und Nenner ein.");
+      return;
+    }
+    const n=parseInt(nS,10), d=parseInt(dS,10), wi=w?parseInt(w,10):0;
+    if(!d){ showFB("neutral","Nenner fehlt","Der Nenner darf nicht 0 sein."); return; }
+
+    const t=task.frac;
+    // Wert vergleichen: wi + n/d == whole + rn/rd  <=>  (wi*d+n)*rd == impN_user? — über Kreuz:
+    const userN=wi*d+n, userD=d;
+    const valueOK = userN*t.impD === t.impN*userD;
+    const reduced = gcd(n,d)===1;
+    const properOK = wi===0 || n<d;
+
+    const ok = valueOK && reduced && properOK;
+    recordFirst(ok);
+
+    if(ok){
+      showFB("ok","Richtig! 🎉","<b>"+(wi? mixHTML(wi,n,d): frHTML(n,d))+"</b> ist vollständig gekürzt – super.");
+      finish(true);
+    } else {
+      let extra;
+      if(valueOK && !reduced) extra="Der Wert stimmt schon – aber der Bruch ist <b>noch nicht vollständig gekürzt</b>! Zähler und Nenner haben den gemeinsamen Teiler "+gcd(n,d)+".";
+      else if(valueOK && !properOK) extra="Der Wert stimmt – aber neben einer ganzen Zahl sollte ein <b>echter</b> Bruchteil stehen (Zähler kleiner als Nenner).";
+      else extra="Lies den Stellenwert der letzten Ziffer genau ab – die Tipps helfen dir.";
+      showFB("err","Leider nicht richtig",extra+" Du kannst es gleich nochmal versuchen.");
+      el.sol.hidden=false;
+    }
+  }
+
+  function showSolution(){
+    if(!task) return;
+    recordFirst(false);
+    showFB("neutral","So geht’s Schritt für Schritt:",'<ol class="sol"><li>'+task.sol.join('</li><li>')+'</li></ol>');
+    finish(false);
+  }
+
+  /* ---------------- Tipps ---------------- */
+  function nextHint(){
+    if(!task || hintIdx>=task.hints.length) return;
+    const div=document.createElement("div");
+    div.className="hint";
+    div.innerHTML='<span class="hno">Tipp '+(hintIdx+1)+'</span>'+task.hints[hintIdx];
+    el.hints.appendChild(div);
+    hintIdx++;
+    if(hintIdx>=task.hints.length) el.hintbtn.hidden=true;
+    else el.hintbtnlabel.textContent="Noch ein Tipp ("+hintIdx+" von "+task.hints.length+" gezeigt)";
+  }
+
+  /* ---------------- Fortschritt ---------------- */
+  function renderScore(){
+    if(stats.done===0){
+      el.scoretext.textContent="Noch keine Aufgabe bearbeitet";
+      el.barfill.style.width="0%";
+      el.barwrap.setAttribute("aria-valuenow","0");
+      return;
+    }
+    const pct=Math.round(100*stats.first/stats.done);
+    el.scoretext.textContent=pct+" % — "+stats.first+" von "+stats.done+" beim ersten Versuch";
+    el.barfill.style.width=pct+"%";
+    el.barfill.classList.toggle("low",pct<50);
+    el.barfill.classList.toggle("mid",pct>=50&&pct<80);
+    el.barwrap.setAttribute("aria-valuenow",String(pct));
+  }
+
+  /* ---------------- Events ---------------- */
+  // Schwierigkeit wählen
+  document.querySelectorAll("[data-lvl]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      document.querySelectorAll("[data-lvl]").forEach(b=>b.setAttribute("aria-pressed", b===btn ? "true":"false"));
+      level=btn.dataset.lvl;
+      el.lvlcap.textContent=POOLS[level].cap;
+      newTask();
+    });
+  });
+  // Richtung wählen (Bruch→Dezimal / Dezimal→Bruch / Gemischt)
+  document.querySelectorAll("[data-dir]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      document.querySelectorAll("[data-dir]").forEach(b=>b.setAttribute("aria-pressed", b===btn ? "true":"false"));
+      dirMode=btn.dataset.dir;
+      newTask();
+    });
+  });
+
+  [...decInputs,...fracInputs].forEach(inp=>{
+    inp.addEventListener("input",()=>{
+      inp.value=inp.value.replace(/[^0-9]/g,"").slice(0,6);
+      updatePreview();
+    });
+    inp.addEventListener("keydown",e=>{
+      if(e.key==="Enter"){ locked ? newTask() : check(); }
+    });
+  });
+
+  el.check.addEventListener("click",check);
+  el.sol.addEventListener("click",showSolution);
+  el.next.addEventListener("click",newTask);
+  el.skip.addEventListener("click",newTask);
+  el.hintbtn.addEventListener("click",nextHint);
+  el.reset.addEventListener("click",()=>{
+    stats.done=0; stats.first=0; renderScore();
+  });
+
+  /* ---------------- Seitennavigation ---------------- */
+  const views={ start:$("viewStart"), review:$("viewReview"), practice:$("viewPractice") };
+  const reduceMotion=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function showView(name){
+    Object.keys(views).forEach(k=>views[k].classList.toggle("active", k===name));
+    window.scrollTo({top:0, behavior:reduceMotion?"auto":"smooth"});
+    if(name==="practice") setTimeout(()=>{ (el.ansDec.hidden?el.fWhole:el.dWhole).focus(); },0);
+  }
+  document.querySelectorAll("[data-go]").forEach(b=>{
+    b.addEventListener("click",()=>showView(b.dataset.go));
+  });
+
+  /* ---------------- Start ---------------- */
+  el.lvlcap.textContent=POOLS.leicht.cap;
+  renderScore();
+  newTask();
+})();
+</script>
